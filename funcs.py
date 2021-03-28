@@ -106,7 +106,7 @@ def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: str, subgroup: int
 # retrieve schedule
 def retrieve_schedule(group_id: str) -> bool:
     base_url: str = 'https://guide.herzen.spb.ru/static/schedule_dates.php'
-    schedule_url: str = f'{base_url}?id_group={group_id}'
+    schedule_url: str = f'{base_url}?id_group={group_id}&date1=2021-01-01&date2='
     request = requests.get(schedule_url)
 
     if not request.ok:
