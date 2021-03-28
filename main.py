@@ -1,6 +1,7 @@
 import re
 import typing as tp
 from datetime import datetime
+from dateutil import tz
 from sys import exit
 
 import requests
@@ -61,8 +62,14 @@ for row in table_rows:
     start_time = f'{date} {timeframe[0]}'
     end_time = f'{date} {timeframe[1]}'
     # convert to datetime objects
-    lesson.start_time = datetime.strptime(start_time, '%d.%m.%Y %H:%M')
-    lesson.end_time = datetime.strptime(end_time, '%d.%m.%Y %H:%M')
+    start_time = datetime.strptime(start_time, '%d.%m.%Y %H:%M')
+    start_time = start_time.replace(tzinfo=tz.gettz('Europe/Moscow'))
+    start_time = start_time.astimezone(tz.tzutc())
+    end_time = datetime.strptime(end_time, '%d.%m.%Y %H:%M')
+    end_time = end_time.replace(tzinfo=tz.gettz('Europe/Moscow'))
+    end_time = end_time.astimezone(tz.tzutc())
+    lesson.start_time = start_time
+    lesson.end_time = end_time
 
     # extract lesson type
     lesson_data = row.find('td')
