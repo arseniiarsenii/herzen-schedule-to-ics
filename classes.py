@@ -11,3 +11,4 @@ class Lesson:
         self.end_time: tp.Optional[datetime] = None  # datetime object
         self.course_link: str = ''  # moodle link
         self.location: str = ''  # address or online
+        self.teacher: str = ''  # name of the teacher

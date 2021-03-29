@@ -9,22 +9,16 @@ from classes import Lesson
 
 
 def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
-    schedule_html =  open(f'raw_schedule/{filename}', 'r')
+    schedule_html = open(f'raw_schedule/{filename}', 'r')
 
     # parse schedule
     soup = BeautifulSoup(schedule_html, 'html.parser')
     schedule = soup.find('table', class_='schedule')
-    table_rows = schedule.find_all('tr')
-    header_skipped = False
+    table_rows = schedule.find('tbody').find_all('tr')
     all_lessons = []
 
     # iterate through the rows of the schedule table
     for row in table_rows:
-        # skip the first row of the table (header)
-        if not header_skipped:
-            header_skipped = True
-            continue
-
         # if row contains date, parse it
         dayname = row.find('th', class_='dayname')
         if dayname is not None:
@@ -32,7 +26,7 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
             dayname = None
             continue
 
-        # if row is nor header nor date, assume it is a lesson entry.
+        # if row is not date, assume it is a lesson entry.
         # initialize a Lesson object and fill it's fields with data parsed from the row
         lesson = Lesson()
 
@@ -52,16 +46,45 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
         lesson.end_time = end_time
 
         # extract lesson type
-        lesson_data = row.find('td')
-        lesson.type = re.findall('\[.*\]', lesson_data.text)[0][1:-1]
+        lesson_data = row.find_all('td')
+
+        if len(lesson_data) > 1:
+            lesson_data = lesson_data[subgroup - 1]
+        else:
+            lesson_data = lesson_data[0]
+
+        try:
+            lesson.type = re.findall('\[.*\]', lesson_data.text)[0][1:-1]
+        except IndexError:
+            lesson.type = ''
 
         # extract lesson title
-        lesson.title = lesson_data.find("strong").text
+        try:
+            lesson.title = lesson_data.find("strong").text
+        except AttributeError:
+            try:
+                lesson.title = lesson_data.find("strong").find("a").text
+            except AttributeError:
+                continue
 
         # extract lesson's online course link if present
         course_link = lesson_data.find("strong").find("a")
         if course_link is not None:
             lesson.course_link = course_link['href']
+
+        # extract lesson's location
+        try:
+            lesson.location = re.findall('</a>, .*</td>', str(lesson_data))[-1][6:-5]
+        except IndexError:
+            lesson.type = ''
+
+        # extract teacher
+        try:
+            for hl in lesson_data.find_all('a'):
+                if 'atlas' in hl['href']:
+                    lesson.teacher = hl.text
+        except TypeError:
+            pass
 
         # save lesson instance for future use
         all_lessons.append(lesson)
@@ -77,15 +100,23 @@ def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: str, subgroup: int
         # create a calendar event for each lesson
         for lesson in lessons:
             lesson_event = Event()
-            lesson_event.name = f'{lesson.title} [{lesson.type}]'
+            
+            if lesson.type:
+                lesson_event.name = f'{lesson.title} [{lesson.type}]'
+            else:
+                lesson_event.name = lesson.title
+            
             lesson_event.begin = lesson.start_time.strftime('%Y-%m-%d %H:%M:%S')
             lesson_event.end = lesson.end_time.strftime('%Y-%m-%d %H:%M:%S')
 
             description = []
             if lesson.location:
                 description.append(f'Место: {lesson.location}')
+                lesson_event.location = lesson.location
             if lesson.course_link:
                 description.append(f'Moodle: {lesson.course_link}')
+            if lesson.teacher:
+                description.append(f'Преподаватель: {lesson.teacher}')
             if description:
                 lesson_event.description = '\n'.join(description)
 
@@ -99,7 +130,7 @@ def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: str, subgroup: int
         return True
 
     except Exception as E:
-        print(f'An error occured while converting lessons:\n{E}')
+        print(f'An error occurred while converting lessons:\n{E}')
         return False
 
 
