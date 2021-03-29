@@ -16,8 +16,17 @@ def index():
 @route('/', method="POST")
 def form_handler():
     group_id = request.forms.get("group_id")
-    subgroup_no = int(request.forms.get("subgroup"))
+    subgroup_no = request.forms.get("subgroup")
     filename = f"{group_id}-{subgroup_no}.ics"
+
+    # validate data
+    if not is_valid_id(group_id):
+        return 'Группы с таким ID нет.'
+
+    try:
+        subgroup_no = int(subgroup_no)
+    except ValueError:
+        return 'Номер подгруппы должен быть числом.'
 
     # check if file already exists
     if path.exists(f'processed_schedule/{filename}'):
@@ -36,8 +45,10 @@ def form_handler():
     # convert HTML schedule to an array of Lesson objects
     try:
         lessons = convert_html_to_lesson(f'{group_id}.html', subgroup_no)
+    except IndexError:
+        return 'Неверный номер подгруппы.'
     except Exception as E:
-        exit(f'Error converting HTML into Lesson objects:\n{E}')
+        exit(f'Error converting HTML into Lesson objects: {E}')
 
     # convert array of Lesson objects into an ics file
     if convert_lesson_to_ics(lessons, group_id, subgroup_no):

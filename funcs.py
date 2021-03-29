@@ -1,11 +1,14 @@
-import requests
 import re
 import typing as tp
 from datetime import datetime
-from dateutil import tz
+
+import requests
 from bs4 import BeautifulSoup
+from dateutil import tz
 from ics import Calendar, Event
+
 from classes import Lesson
+from valid_group_ids import valid_ids
 
 
 def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
@@ -147,3 +150,8 @@ def retrieve_schedule(group_id: str) -> bool:
         with open(f'raw_schedule/{group_id}.html', 'w') as file:
             file.writelines(request.text)
         return True
+
+
+# validate group id
+def is_valid_id(group_id: str) -> bool:
+    return group_id in valid_ids

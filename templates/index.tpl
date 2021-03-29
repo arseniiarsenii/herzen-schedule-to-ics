@@ -20,6 +20,6 @@ Export</u></h1>
 <p align="center"><br/>
 </p>
 <p align="center">Как найти ID группы:<br><i>https://guide.herzen.spb.ru/static/schedule_dates.php?id_group=<b><u>12460</u></b></i></p>
-<p align="center">Арсений Величко 2021.</p>
+<p align="center">Арсений Величко 2021. <a href='https://github.com/arseniiarsenii/herzen-schedule-to-ics'>Код проекта на Github.</a></p>
 </body>
 </html>
