@@ -1,9 +1,15 @@
-from os import path
+from os import path, mkdir
 from sys import exit
 
 from bottle import route, run, request, template, static_file
 
 from funcs import *
+
+# create necessary directories if missing
+directory_names = ['raw_schedule', 'processed_schedule']
+for dir in directory_names:
+    if not path.isdir(dir):
+        mkdir(dir)
 
 
 # display index page
