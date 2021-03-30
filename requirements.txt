@@ -12,6 +12,6 @@ pytz==2021.1
 requests==2.25.1
 six==1.15.0
 soupsieve==2.2.1
-TatSu==5.6.1
+TatSu
 urllib3==1.26.4
 zope.interface==5.3.0
