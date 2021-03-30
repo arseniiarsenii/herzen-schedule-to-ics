@@ -1,5 +1,4 @@
 # Herzen Schedule Export
-``
 _______________
 
 ## О проекте
