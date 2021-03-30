@@ -1,1 +1,1 @@
-web: gunicorn main:app --bind='0.0.0.0:80'
+web: gunicorn main:app
