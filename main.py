@@ -27,12 +27,12 @@ def form_handler():
 
     # validate data
     if not is_valid_id(group_id):
-        return 'Группы с таким ID нет.'
+        return '<p align="center">Группы с таким ID нет.</p>'
 
     try:
         subgroup_no = int(subgroup_no)
     except ValueError:
-        return 'Номер подгруппы должен быть числом.'
+        return '<p align="center">Номер подгруппы должен быть числом.</p>'
 
     # check if file already exists
     if path.exists(f'processed_schedule/{filename}'):
@@ -52,7 +52,7 @@ def form_handler():
     try:
         lessons = convert_html_to_lesson(f'{group_id}.html', subgroup_no)
     except IndexError:
-        return 'Неверный номер подгруппы.'
+        return '<p align="center">Неверный номер подгруппы.</p>'
     except Exception as E:
         exit(f'Error converting HTML into Lesson objects: {E}')
 
@@ -67,7 +67,7 @@ def form_handler():
 
 # start a web server
 if __name__ == "__main__":
-    run(host='0.0.0.0', port=8080)
+    run(host='0.0.0.0', port=8080, server='gunicorn')
 
 # define "app" object for the WSGI server to run
 app = default_app()

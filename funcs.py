@@ -54,6 +54,8 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
         if len(lesson_data) > 1:
             lesson_data = lesson_data[subgroup - 1]
         else:
+            if not 1 <= subgroup <= 2:
+                raise IndexError
             lesson_data = lesson_data[0]
 
         try:
