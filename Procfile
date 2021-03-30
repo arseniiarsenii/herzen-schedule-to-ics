@@ -1,1 +1,1 @@
-web: gunicorn main:app
+web: gunicorn main:app  -w 4 --keep-alive 120 --timeout 120
