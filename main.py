@@ -1,7 +1,7 @@
 from os import path, mkdir
 from sys import exit
 
-from bottle import route, run, request, template, static_file
+from bottle import route, run, request, template, static_file, default_app
 
 from funcs import *
 
@@ -67,4 +67,7 @@ def form_handler():
 
 # start a web server
 if __name__ == "__main__":
-    run(host='0.0.0.0', port=80, debug=True)
+    run(host='0.0.0.0', port=8080)
+
+# define "app" object for the WSGI server to run
+app = default_app()

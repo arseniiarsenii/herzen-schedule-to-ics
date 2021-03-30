@@ -37,6 +37,8 @@ Herzen Schedule Export осуществляет парсинг веб-стран
 - Библиотека Beautiful Soup
 - Фреймворк Semantic UI
 - Веб-фреймворк Bottle
+- Веб-сервер Gunicorn
+- Платформа Heroku
 
 ### Производительность
 
