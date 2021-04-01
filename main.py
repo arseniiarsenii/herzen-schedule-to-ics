@@ -1,9 +1,10 @@
 from os import path, mkdir
-from sys import exit
+from threading import Thread
 
-from bottle import route, run, request, template, static_file, default_app
+from bottle import route, run, template, static_file, default_app, HTTPResponse, response, get
 
-from funcs import *
+from funcs import is_valid_id, is_id_in_queue, set_up_schedule
+
 
 # create necessary directories if missing
 directory_names = ['raw_schedule', 'processed_schedule']
@@ -15,59 +16,39 @@ for dir in directory_names:
 # display index page
 @route('/')
 def index():
-    return template("templates/index")
+    return template("templates/index.tpl")
 
 
-# serve a file to download when ready
-@route('/', method="POST")
-def form_handler():
-    group_id = request.forms.get("group_id")
-    subgroup_no = request.forms.get("subgroup")
-    filename = f"{group_id}-{subgroup_no}.ics"
-
+# download a file or start preparing it
+@get('/<group_id:int>/<subgroup_no:int>')
+def form_handler(group_id: int, subgroup_no: int = 1):
+    print(group_id)
+    # set CORS headers
+    response.add_header('Access-Control-Allow-Origin', '*')
     # validate data
-    if not is_valid_id(group_id):
-        return '<p align="center">Группы с таким ID нет.</p>'
-
-    try:
-        subgroup_no = int(subgroup_no)
-    except ValueError:
-        return '<p align="center">Номер подгруппы должен быть числом.</p>'
-
+    if not isinstance(group_id, int) or not isinstance(subgroup_no, int):
+        return HTTPResponse(status=400, body='Номера группы и подгруппы должны быть числами.')
+    elif not is_valid_id(group_id):
+        return HTTPResponse(status=400, body='Группы с таким ID нет.')
+    elif is_id_in_queue(group_id):
+        return HTTPResponse(status=202)
+    yield
+    filename: str = f"{group_id}-{subgroup_no}.ics"
     # check if file already exists
     if path.exists(f'processed_schedule/{filename}'):
         print('File already exists. No need to generate.')
         return static_file(filename, root='processed_schedule', download=filename)
 
-    # download schedule HTML page if not present
-    if not path.exists(f"raw_schedule/{group_id}.html"):
-        if retrieve_schedule(group_id):
-            print('Schedule retrieved successfully')
-        else:
-            exit('Error retrieving schedule')
-    else:
-        print('Schedule already saved. Loading up.')
+    # start fetching and setting up schedule
+    Thread(target=set_up_schedule, args=(group_id, subgroup_no)).start()
 
-    # convert HTML schedule to an array of Lesson objects
-    try:
-        lessons = convert_html_to_lesson(f'{group_id}.html', subgroup_no)
-    except IndexError:
-        return '<p align="center">Неверный номер подгруппы.</p>'
-    except Exception as E:
-        exit(f'Error converting HTML into Lesson objects: {E}')
+    return HTTPResponse(status=202)
 
-    # convert array of Lesson objects into an ics file
-    if convert_lesson_to_ics(lessons, group_id, subgroup_no):
-        print('Successful ics conversion, file saved.')
-    else:
-        exit('Failed to convert to ics.')
 
-    return static_file(filename, root='processed_schedule', download=filename)
+# define "app" object for the WSGI server to run
+app = default_app()
 
 
 # start a web server
 if __name__ == "__main__":
-    run(host='0.0.0.0', port=8080, server='gunicorn')
-
-# define "app" object for the WSGI server to run
-app = default_app()
+    run(app=app, host='0.0.0.0', port=8080, server='gunicorn', debug=True)

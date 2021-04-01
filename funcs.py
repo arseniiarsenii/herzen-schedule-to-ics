@@ -1,5 +1,6 @@
 import re
 import typing as tp
+from os import path
 from datetime import datetime
 
 import requests
@@ -9,6 +10,38 @@ from ics import Calendar, Event
 
 from classes import Lesson
 from valid_group_ids import valid_ids
+
+request_queue = set()
+
+
+def is_id_in_queue(group_id: int):
+    return group_id in request_queue
+
+
+def set_up_schedule(group_id: int, subgroup_no: int):
+    # download schedule HTML page if not present
+    if not path.exists(f"raw_schedule/{group_id}.html"):
+        if fetch_schedule(group_id):
+            print('Schedule retrieved successfully')
+        else:
+            request_queue.remove(group_id)
+            exit('Error retrieving schedule')
+    else:
+        print('Schedule already saved. Loading up.')
+
+    # convert HTML schedule to an array of Lesson objects
+    try:
+        lessons = convert_html_to_lesson(f'{group_id}.html', subgroup_no)
+    except Exception as E:
+        request_queue.remove(group_id)
+        exit(f'Error converting HTML into Lesson objects: {E}')
+
+    if convert_lesson_to_ics(lessons, group_id, subgroup_no):
+        request_queue.remove(group_id)
+        print('Successful ics conversion, file saved.')
+    else:
+        request_queue.remove(group_id)
+        exit('Failed to convert to ics.')
 
 
 def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
@@ -97,7 +130,7 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
     return all_lessons
 
 
-def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: str, subgroup: int = 1) -> bool:
+def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: int, subgroup: int = 1) -> bool:
     try:
         # form an ics calendar
         calendar = Calendar()
@@ -139,8 +172,8 @@ def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: str, subgroup: int
         return False
 
 
-# retrieve schedule
-def retrieve_schedule(group_id: str) -> bool:
+# fetch schedule
+def fetch_schedule(group_id: int) -> bool:
     base_url: str = 'https://guide.herzen.spb.ru/static/schedule_dates.php'
     schedule_url: str = f'{base_url}?id_group={group_id}&date1=2021-01-01&date2='
     request = requests.get(schedule_url)
@@ -155,5 +188,5 @@ def retrieve_schedule(group_id: str) -> bool:
 
 
 # validate group id
-def is_valid_id(group_id: str) -> bool:
+def is_valid_id(group_id: int) -> bool:
     return group_id in valid_ids
