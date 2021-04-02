@@ -39,6 +39,7 @@ def form_handler(group_id: int, subgroup_no: int = 1):
     # cors header for javascript requests
     cors_k, cors_v = 'Access-Control-Allow-Origin', '*'
     cors_header = {cors_k: cors_v}
+    
     # validate data, for invalid data return 400 Bad Request
     try:
         group_id = int(group_id)

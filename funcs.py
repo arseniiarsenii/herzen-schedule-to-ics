@@ -206,9 +206,9 @@ def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: int, subgroup: int
 # fetch schedule
 def fetch_schedule(group_id: int) -> bool:
     base_url: str = 'https://guide.herzen.spb.ru/static/schedule_dates.php'
-    today = datetime.today()
-    today_str = today.isoformat().split("T")[0]
-    schedule_url: str = f'{base_url}?id_group={group_id}&date1={today_str}&date2='
+    start_of_year: datetime = datetime(datetime.today().year, 1, 1)
+    start_of_year_str: str = start_of_year.isoformat().split("T")[0]
+    schedule_url: str = f'{base_url}?id_group={group_id}&date1={start_of_year_str}&date2='
     request = requests.get(schedule_url)
 
     if not request.ok:
