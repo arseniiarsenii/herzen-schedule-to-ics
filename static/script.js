@@ -1,46 +1,75 @@
 (async () => {
     // url of the backend
-    let serverUrl = "http://0.0.0.0:8080";
+    let serverUrl = 'http://0.0.0.0:8080';
 
-    // initialize group id dropdown
-    let groupIdDropdown = $(".ui.dropdown");
-    let groups = fetch(`${serverUrl}/get_valid_groups`)
+    // get group id and subgroup elements
+    let $groupIdDropdown = $('.ui.dropdown');
+    let subgroups = document.querySelectorAll('input[name="subgroup"]');
+    // get groups from server
+    fetch(`${serverUrl}/get_valid_groups`)
         .then(response => response.json())
         .then(groups_dict => {
             let result = [];
+            // for every item in the dict with
             Object.entries(groups_dict).forEach(([key, value]) => {
+                // key = group id
+                // value = name
                 result.push({
                     value: key,
-                    text: `${value} ${key}`,
+                    text: `${value} [${key}]`,
                     name: `${value} [${key}]`
                 });
             });
 
-            let values = {
-                values: result
-            }
-            groupIdDropdown.dropdown(values);
-            groupIdDropdown.removeClass("loading");
+            // initialize dropdown
+            $groupIdDropdown.dropdown({
+                values: result,
+                fullTextSearch: 'exact',
+                onChange: async (value, text) => {
+                    document.querySelector('input[name="subgroup"][value="1"]').checked = true;
+
+                    let numberOfSubgroups = await fetch(`${serverUrl}/get_subgroups/${value}`);
+                    numberOfSubgroups = parseInt(await numberOfSubgroups.text())
+                    if (numberOfSubgroups > 0) {
+                        for (let i = 0; i < subgroups.length; i++) {
+                            if (i < numberOfSubgroups) {
+                                $(subgroups[i]).closest('.field').css('display', '');
+                            } else {
+                                $(subgroups[i]).closest('.field').css('display', 'none');
+                            }
+                        }
+
+                        document.getElementById('subgroup').style.display = '';
+                    } else {
+                        document.getElementById('subgroup').style.display = 'none';
+                    }
+                }
+            });
+
+            $groupIdDropdown.removeClass('loading');
         });
 
 	// grab all the relevant elements
-	let subgroupNoInput = document.getElementById("subgroup-id");
-	let downloadButton = document.getElementById("download");
-	let spinner = document.getElementById("spinner");
-	let message = document.getElementById("message");
+	let downloadButton = document.getElementById('download');
+	let spinner = document.getElementById('spinner');
+	let message = document.getElementById('message');
 
 	// listen for clicks on download button
-	downloadButton.addEventListener("click", async () => {
-	    let groupId = groupIdDropdown.dropdown("get value");
-	    let subgroupNo = subgroupNoInput.value;
-	    let url = `${serverUrl}/${groupId}/${subgroupNo}`;
-	    message.innerHTML = "Расписание загружается. Иногда это может занять до 40 секунд.";
+	downloadButton.addEventListener('click', async () => {
+	    let groupId = $groupIdDropdown.dropdown('get value');
+	    if (groupId === '') {
+	        message.innerHTML = 'Пожалуйста, выберите группу.';
+	        return;
+        }
+	    let subgroupNo = document.querySelector('input[name="subgroup"]:checked').value;
+	    let url = `${serverUrl}/get_schedule/${groupId}/${subgroupNo}`;
+	    message.innerHTML = 'Расписание загружается. Иногда это может занять до 40 секунд.';
 
 	    let shouldBreak = false;
 	    while (!shouldBreak) {
 	        // hide button, show spinner
-	        downloadButton.style.display = "none";
-	        spinner.style.display = "initial";
+	        downloadButton.style.display = 'none';
+	        spinner.style.display = 'initial';
 
 	        // wait for a fetch, but not less than the delay
 	        await Promise.all([
@@ -51,11 +80,11 @@
                     // ignore 202, break on anything else
                     if (response.status !== 202) {
                         // show button, hide spinner
-                        downloadButton.style.display = "initial";
-                        spinner.style.display = "none";
+                        downloadButton.style.display = 'initial';
+                        spinner.style.display = 'none';
 
                         if (response.status === 200) {
-                            message.innerHTML = "";
+                            message.innerHTML = '';
                             let blob = await response.blob();
                             let filename = `${groupId}-${subgroupNo}.ics`
 

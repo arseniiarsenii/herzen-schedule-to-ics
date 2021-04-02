@@ -17,20 +17,30 @@
         <div class="ui centered raised padded container segment">
             <h1 class="ui center aligned header"><u>Herzen Schedule Export</u></h1>
             <h4 class="ui center aligned header ">Экспорт расписания вашей группы в файл iCalendar (.ics) с возможностью последующего импорта в Google календарь и другие календари.</h4>
-            <div class="ui center aligned segment" style="size: inherit;">
+            <div id="group-id" class="ui center aligned segment" style="size: inherit;">
                 <div class="ui top attached label">Данные</div>
                 <div>Выберите группу</div>
+                <br>
                 <div class="ui fluid search selection dropdown loading">
                     <input type="hidden">
                     <i class="dropdown icon"></i>
                     <div class="default text">Начните вводить название группы или ID</div>
                 </div>
-                <div>Введите номер подгруппы </div>
-                <div class="ui fluid left icon input">
-                    <input id="subgroup-id" placeholder="Если нет - 1">
-                    <i class="users icon"></i>
-                </div>
                 <br>
+                <div id="subgroup" class="ui form" style="display: none;">
+                    <div>Выберите номер подгруппы</div>
+                    <br>
+                    <div class="inline fields" style="display: flex; flex-direction: row; justify-content: center;">
+                    % for i in range(1,5):
+                        <div class="field">
+                            <div class="ui radio checkbox">
+                                <input type="radio" name="subgroup" value="{{ i }}" {{ 'checked="checked"' if i == 1 else '' }}>
+                                <label>{{ i }}</label>
+                            </div>
+                        </div>
+                    % end
+                    </div>
+                </div>
                 <br>
                 <p id="message" align="center" style="color: darkred;"></p>
                 <div class="ui fluid center aligned container">

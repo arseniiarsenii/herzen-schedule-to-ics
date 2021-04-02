@@ -12,27 +12,27 @@ from classes import Lesson
 
 # keep track of schedules that are currently being worked on
 # or have errored out
-request_queue = dict()
+request_queue: tp.Dict[int, str] = dict()
 
 
 # check if a schedule is currently being worked on
 # or has an error logged
-def status_in_queue(group_id: int):
+def status_in_queue(group_id: int) -> tp.Optional[str]:
     return request_queue.get(group_id)
 
 
 # add to queue with working status
-def add_to_queue(group_id: int):
-    request_queue[group_id] = "Working"
+def add_to_queue(group_id: int) -> None:
+    request_queue[group_id] = 'Working'
 
 
 # remove from queue to indicate finishing work on a schedule
-def remove_from_queue(group_id: int):
+def remove_from_queue(group_id: int) -> None:
     request_queue.pop(group_id, None)
 
 
 # log an error in queue and terminal
-def log_error_in_queue(group_id: int, message: str, dev_message: str = None):
+def log_error_in_queue(group_id: int, message: str, dev_message: str = '') -> None:
     if not dev_message:
         dev_message = message
 
@@ -41,11 +41,11 @@ def log_error_in_queue(group_id: int, message: str, dev_message: str = None):
 
 
 # download html, parse it and make the .ics file
-def set_up_schedule(group_id: int, subgroup_no: int):
+def set_up_schedule(group_id: int, subgroup_no: int) -> None:
     add_to_queue(group_id)
 
     # download schedule HTML page if not present
-    if not path.exists(f"raw_schedule/{group_id}.html"):
+    if not path.exists(f'raw_schedule/{group_id}.html'):
         if fetch_schedule(group_id):
             print(f'Schedule for group_id={group_id} retrieved successfully.')
         else:
@@ -129,15 +129,15 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
 
         # extract lesson title
         try:
-            lesson.title = lesson_data.find("strong").text
+            lesson.title = lesson_data.find('strong').text
         except AttributeError:
             try:
-                lesson.title = lesson_data.find("strong").find("a").text
+                lesson.title = lesson_data.find('strong').find('a').text
             except AttributeError:
                 continue
 
         # extract lesson's online course link if present
-        course_link = lesson_data.find("strong").find("a")
+        course_link = lesson_data.find('strong').find('a')
         if course_link is not None:
             lesson.course_link = course_link['href']
 
@@ -205,10 +205,10 @@ def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: int, subgroup: int
 
 # fetch schedule
 def fetch_schedule(group_id: int) -> bool:
-    base_url: str = 'https://guide.herzen.spb.ru/static/schedule_dates.php'
-    start_of_year: datetime = datetime(datetime.today().year, 1, 1)
-    start_of_year_str: str = start_of_year.isoformat().split("T")[0]
-    schedule_url: str = f'{base_url}?id_group={group_id}&date1={start_of_year_str}&date2='
+    base_url = 'https://guide.herzen.spb.ru/static/schedule_dates.php'
+    start_of_year = datetime(datetime.today().year, 1, 1)
+    start_of_year_str = start_of_year.isoformat().split('T')[0]
+    schedule_url = f'{base_url}?id_group={group_id}&date1={start_of_year_str}&date2='
     request = requests.get(schedule_url)
 
     if not request.ok:
@@ -218,3 +218,12 @@ def fetch_schedule(group_id: int) -> bool:
         with open(f'raw_schedule/{group_id}.html', 'w') as file:
             file.writelines(request.text)
         return True
+
+
+# fetch static schedule and count the number of subgroups
+def fetch_subgroups(group_id: int) -> int:
+    today = datetime.today().isoformat().split('T')[0]
+    url = f'https://guide.herzen.spb.ru/static/schedule_dates.php?id_group={group_id}&date1={today}&date2={today}'
+    html = requests.get(url).text
+    result = html.count('подгруппа')
+    return result
