@@ -8,7 +8,9 @@
 
 	// listen for clicks on download button
 	downloadButton.addEventListener("click", async () => {
-	    let url = `http://0.0.0.0:8080/${groupIdInput.value}/${subgroupNoInput.value}`;
+	    let groupId = groupIdInput.value;
+	    let subgroupNo = subgroupNoInput.value;
+	    let url = `http://0.0.0.0:8080/${groupId}/${subgroupNo}`;
 	    message.innerHTML = "Расписание загружается. Иногда это может занять до 40 секунд.";
 
 	    let shouldBreak = false;
@@ -32,8 +34,29 @@
                         if (response.status === 200) {
                             message.innerHTML = "";
                             let blob = await response.blob();
-                            let file = window.URL.createObjectURL(blob);
-                            window.location.assign(file);
+                            let filename = `${groupId}-${subgroupNo}.ics`
+
+                            // downloading file
+                            if (window.navigator.msSaveOrOpenBlob) {
+                                // download method for IE
+                                window.navigator.msSaveOrOpenBlob(blob, filename);
+                            } else {
+                                // create <a> element
+                                const a = document.createElement('a');
+                                document.body.appendChild(a);
+
+                                // set it to download the file and click it
+                                const url = window.URL.createObjectURL(blob);
+                                a.href = url;
+                                a.download = filename;
+                                a.click();
+
+                                // clean up
+                                setTimeout(() => {
+                                  window.URL.revokeObjectURL(url);
+                                  document.body.removeChild(a);
+                                }, 0)
+                            }
                         } else {
                             // status codes besides 200 and 202 signify errors
                             // hopefully they're returned by the backend itself
