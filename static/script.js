@@ -24,6 +24,7 @@
             // initialize dropdown
             $groupIdDropdown.dropdown({
                 values: result,
+                placeholder: 'Начните вводить название группы или ID',
                 fullTextSearch: 'exact',
                 onChange: async (value, text) => {
                     document.querySelector('input[name="subgroup"][value="1"]').checked = true;
