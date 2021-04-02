@@ -1,6 +1,6 @@
 (async () => {
     // url of the backend
-    let serverUrl = 'http://0.0.0.0:8080';
+    let serverUrl = 'https://herzen-schedule-to-ics.herokuapp.com;
 
     // get group id and subgroup elements
     let $groupIdDropdown = $('.ui.dropdown');
