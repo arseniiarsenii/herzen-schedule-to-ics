@@ -20,6 +20,7 @@
                 values: result
             }
             groupIdDropdown.dropdown(values);
+            groupIdDropdown.removeClass("loading");
         });
 
 	// grab all the relevant elements

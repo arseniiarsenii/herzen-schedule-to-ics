@@ -20,7 +20,7 @@
             <div class="ui center aligned segment" style="size: inherit;">
                 <div class="ui top attached label">Данные</div>
                 <div>Выберите группу</div>
-                <div class="ui fluid search selection dropdown">
+                <div class="ui fluid search selection dropdown loading">
                     <input type="hidden">
                     <i class="dropdown icon"></i>
                     <div class="default text">Начните вводить название группы или ID</div>
