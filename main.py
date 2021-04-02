@@ -27,9 +27,12 @@ def form_handler(group_id: int, subgroup_no: int = 1):
     cors_k, cors_v = 'Access-Control-Allow-Origin', '*'
     cors_header = {cors_k: cors_v}
     # validate data, for invalid data return 400 Bad Request
-    if not isinstance(group_id, int) or not isinstance(subgroup_no, int):
+    try:
+        group_id = int(group_id)
+        subgroup_no = int(subgroup_no)
+    except ValueError:
         return HTTPResponse(status=400, body='Номера группы и подгруппы должны быть числами.', headers=cors_header)
-    elif not is_valid_id(group_id):
+    if not is_valid_id(group_id):
         return HTTPResponse(status=400, body='Группы с таким ID нет.', headers=cors_header)
 
     filename: str = f"{group_id}-{subgroup_no}.ics"

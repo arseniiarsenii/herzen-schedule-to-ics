@@ -33,9 +33,12 @@ def remove_from_queue(group_id: int):
 
 
 # log an error in queue and terminal
-def log_error_in_queue(group_id: int, message: str):
+def log_error_in_queue(group_id: int, message: str, dev_message: str = None):
+    if not dev_message:
+        dev_message = message
+
     request_queue[group_id] = message
-    print(message)
+    print(dev_message)
 
 
 # download html, parse it and make the .ics file
@@ -47,8 +50,9 @@ def set_up_schedule(group_id: int, subgroup_no: int):
         if fetch_schedule(group_id):
             print(f'Schedule for group_id={group_id} retrieved successfully.')
         else:
-            message = f'Error retrieving schedule for group_id={group_id}.'
-            log_error_in_queue(group_id, message)
+            message = 'Ошибка при загрузке расписания с серверов РГПУ. Возможно, сервера недоступны?'
+            dev_message = f'Error retrieving schedule for group_id={group_id}.'
+            log_error_in_queue(group_id, message, dev_message)
             return
     else:
         print(f'Schedule for group_id={group_id} already saved. Loading up.')
@@ -57,16 +61,18 @@ def set_up_schedule(group_id: int, subgroup_no: int):
     try:
         lessons = convert_html_to_lesson(f'{group_id}.html', subgroup_no)
     except Exception as E:
-        message = f'Error converting HTML for group_id={group_id} into Lesson objects: {E}'
-        log_error_in_queue(group_id, message)
+        message = 'Ошибка при обработке расписания. Возможно, неверно указан номер подгруппы?'
+        dev_message = f'Error converting HTML for group_id={group_id}, subgroup_no={subgroup_no} into Lesson objects: {E}'
+        log_error_in_queue(group_id, message, dev_message)
         return
 
     if convert_lesson_to_ics(lessons, group_id, subgroup_no):
         remove_from_queue(group_id)
         print(f'Successful ics conversion for group_id={group_id}, subgroup_no={subgroup_no}. File saved.')
     else:
-        message = f'Failed to convert to ics for group_id={group_id}, subgroup_no={subgroup_no}.'
-        log_error_in_queue(group_id, message)
+        message = 'Ошибка при конвертации расписания в файл.'
+        dev_message = f'Failed to convert to ics for group_id={group_id}, subgroup_no={subgroup_no}.'
+        log_error_in_queue(group_id, message, dev_message)
         return
 
 
