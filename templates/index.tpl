@@ -25,7 +25,7 @@
                     <i class="dropdown icon"></i>
                     <div class="default text">Начните вводить название группы или ID</div>
                 </div>
-                <div> Номер подгруппы </div>
+                <div>Введите номер подгруппы </div>
                 <div class="ui fluid left icon input">
                     <input id="subgroup-id" placeholder="Если нет - 1">
                     <i class="users icon"></i>
