@@ -20,7 +20,7 @@ def index():
 
 
 # download a file or start preparing it
-@get('/<group_id:int>/<subgroup_no:int>')
+@get('/<group_id>/<subgroup_no>')
 def form_handler(group_id: int, subgroup_no: int = 1):
     print(f'User requested schedule for group_id={group_id}.')
     # cors header for javascript requests

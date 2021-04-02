@@ -13,12 +13,12 @@
             <div class="ui top attached label compact">Данные</div>
             <div> ID группы </div>
             <div class="ui left icon input compact">
-                <input id="group-id" type="number" placeholder="12460">
+                <input id="group-id" type="tel" placeholder="12460">
                 <i class="users icon"></i>
             </div>
             <div> Номер подгруппы </div>
             <div class="ui left icon input compact">
-                <input id="subgroup-id" type="number" placeholder="Если нет - 1">
+                <input id="subgroup-id" type="tel" placeholder="Если нет - 1">
                 <i class="users icon"></i>
             </div>
             <p id="message" align="center"></p>
