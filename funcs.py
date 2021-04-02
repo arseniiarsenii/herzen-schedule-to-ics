@@ -1,5 +1,6 @@
 import re
 import typing as tp
+from os import path
 from datetime import datetime
 
 import requests
@@ -8,7 +9,70 @@ from dateutil import tz
 from ics import Calendar, Event
 
 from classes import Lesson
-from valid_group_ids import valid_ids
+
+# keep track of schedules that are currently being worked on
+# or have errored out
+request_queue: tp.Dict[int, str] = dict()
+
+
+# check if a schedule is currently being worked on
+# or has an error logged
+def status_in_queue(group_id: int) -> tp.Optional[str]:
+    return request_queue.get(group_id)
+
+
+# add to queue with working status
+def add_to_queue(group_id: int) -> None:
+    request_queue[group_id] = 'Working'
+
+
+# remove from queue to indicate finishing work on a schedule
+def remove_from_queue(group_id: int) -> None:
+    request_queue.pop(group_id, None)
+
+
+# log an error in queue and terminal
+def log_error_in_queue(group_id: int, message: str, dev_message: str = '') -> None:
+    if not dev_message:
+        dev_message = message
+
+    request_queue[group_id] = message
+    print(dev_message)
+
+
+# download html, parse it and make the .ics file
+def set_up_schedule(group_id: int, subgroup_no: int) -> None:
+    add_to_queue(group_id)
+
+    # download schedule HTML page if not present
+    if not path.exists(f'raw_schedule/{group_id}.html'):
+        if fetch_schedule(group_id):
+            print(f'Schedule for group_id={group_id} retrieved successfully.')
+        else:
+            message = 'Ошибка при загрузке расписания с серверов РГПУ. Возможно, сервера недоступны?'
+            dev_message = f'Error retrieving schedule for group_id={group_id}.'
+            log_error_in_queue(group_id, message, dev_message)
+            return
+    else:
+        print(f'Schedule for group_id={group_id} already saved. Loading up.')
+
+    # convert HTML schedule to an array of Lesson objects
+    try:
+        lessons = convert_html_to_lesson(f'{group_id}.html', subgroup_no)
+    except Exception as E:
+        message = 'Ошибка при обработке расписания. Возможно, неверно указан номер подгруппы?'
+        dev_message = f'Error converting HTML for group_id={group_id}, subgroup_no={subgroup_no} into Lesson objects: {E}'
+        log_error_in_queue(group_id, message, dev_message)
+        return
+
+    if convert_lesson_to_ics(lessons, group_id, subgroup_no):
+        remove_from_queue(group_id)
+        print(f'Successful ics conversion for group_id={group_id}, subgroup_no={subgroup_no}. File saved.')
+    else:
+        message = 'Ошибка при конвертации расписания в файл.'
+        dev_message = f'Failed to convert to ics for group_id={group_id}, subgroup_no={subgroup_no}.'
+        log_error_in_queue(group_id, message, dev_message)
+        return
 
 
 def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
@@ -65,15 +129,15 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
 
         # extract lesson title
         try:
-            lesson.title = lesson_data.find("strong").text
+            lesson.title = lesson_data.find('strong').text
         except AttributeError:
             try:
-                lesson.title = lesson_data.find("strong").find("a").text
+                lesson.title = lesson_data.find('strong').find('a').text
             except AttributeError:
                 continue
 
         # extract lesson's online course link if present
-        course_link = lesson_data.find("strong").find("a")
+        course_link = lesson_data.find('strong').find('a')
         if course_link is not None:
             lesson.course_link = course_link['href']
 
@@ -97,7 +161,7 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
     return all_lessons
 
 
-def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: str, subgroup: int = 1) -> bool:
+def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: int, subgroup: int = 1) -> bool:
     try:
         # form an ics calendar
         calendar = Calendar()
@@ -139,14 +203,16 @@ def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: str, subgroup: int
         return False
 
 
-# retrieve schedule
-def retrieve_schedule(group_id: str) -> bool:
-    base_url: str = 'https://guide.herzen.spb.ru/static/schedule_dates.php'
-    schedule_url: str = f'{base_url}?id_group={group_id}&date1=2021-01-01&date2='
+# fetch schedule
+def fetch_schedule(group_id: int) -> bool:
+    base_url = 'https://guide.herzen.spb.ru/static/schedule_dates.php'
+    start_of_year = datetime(datetime.today().year, 1, 1)
+    start_of_year_str = start_of_year.isoformat().split('T')[0]
+    schedule_url = f'{base_url}?id_group={group_id}&date1={start_of_year_str}&date2='
     request = requests.get(schedule_url)
 
     if not request.ok:
-        print(f'Error retrieving schedule. Request code: {request.status_code}.')
+        print(f'Error retrieving schedule for group_id={group_id}. Request code: {request.status_code}.')
         return False
     else:
         with open(f'raw_schedule/{group_id}.html', 'w') as file:
@@ -154,6 +220,10 @@ def retrieve_schedule(group_id: str) -> bool:
         return True
 
 
-# validate group id
-def is_valid_id(group_id: str) -> bool:
-    return group_id in valid_ids
+# fetch static schedule and count the number of subgroups
+def fetch_subgroups(group_id: int) -> int:
+    today = datetime.today().isoformat().split('T')[0]
+    url = f'https://guide.herzen.spb.ru/static/schedule_dates.php?id_group={group_id}&date1={today}&date2={today}'
+    html = requests.get(url).text
+    result = html.count('подгруппа')
+    return result

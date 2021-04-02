@@ -1,0 +1,6 @@
+venv/
+.idea/
+__pycache__/
+raw_schedule/
+processed_schedule/
+.mypy_cache/
