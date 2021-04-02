@@ -52,5 +52,8 @@ def fetch_groups() -> tp.Dict[int, str]:
     return groups_cache
 
 
+# check if a group id is present among all groups
 def group_id_is_valid(group_id: int) -> bool:
+    # call in case groups are not fetched yet
+    fetch_groups()
     return group_id in groups_cache.keys()
