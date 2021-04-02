@@ -38,6 +38,6 @@
         </div>
     </div>
     </div>
-    <script>(()=>{let e=document.getElementById("group-id"),t=document.getElementById("subgroup-id"),n=document.getElementById("download"),s=document.getElementById("spinner"),i=document.getElementById("message");n.addEventListener("click",async()=>{let l=`https://127.0.0.1:8080/${e.value}/${t.value}`;i.innerHTML="";let a=!1;for(;!a&&(n.style.display="none",s.style.display="initial",await Promise.all([fetch(l).then(e=>async()=>{if(200===e.status||202!==e.status){if(n.style.display="initial",s.style.display="none",200===e.status){let t=await e.blob(),n=window.URL.createObjectURL(t);window.location.assign(n)}else 202!==e.status&&(i.innerHTML=await e.text());a=!0}}),new Promise(e=>setTimeout(e,1e4))]),!a););})})();</script>
+    <script>(()=>{let e=document.getElementById("group-id"),t=document.getElementById("subgroup-id"),n=document.getElementById("download"),i=document.getElementById("spinner"),l=document.getElementById("message");n.addEventListener("click",async()=>{let a=`http://0.0.0.0:8080/${e.value}/${t.value}`;l.innerHTML="Расписание загружается. Иногда это может занять до 40 секунд.";let s=!1;for(;!s;)n.style.display="none",i.style.display="initial",await Promise.all([new Promise(async e=>{let t=await fetch(a);if(202!==t.status){if(n.style.display="initial",i.style.display="none",200===t.status){l.innerHTML="";let e=await t.blob(),n=window.URL.createObjectURL(e);window.location.assign(n)}else l.innerHTML=await t.text();s=!0}e()}),new Promise(e=>setTimeout(e,1e4))])})})();</script>
 </body>
 </html>

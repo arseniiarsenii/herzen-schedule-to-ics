@@ -11,37 +11,63 @@ from ics import Calendar, Event
 from classes import Lesson
 from valid_group_ids import valid_ids
 
-request_queue = set()
+# keep track of schedules that are currently being worked on
+# or have errored out
+request_queue = dict()
 
 
-def is_id_in_queue(group_id: int):
-    return group_id in request_queue
+# check if a schedule is currently being worked on
+# or has an error logged
+def status_in_queue(group_id: int):
+    return request_queue.get(group_id)
 
 
+# add to queue with working status
+def add_to_queue(group_id: int):
+    request_queue[group_id] = "Working"
+
+
+# remove from queue to indicate finishing work on a schedule
+def remove_from_queue(group_id: int):
+    request_queue.pop(group_id, None)
+
+
+# log an error in queue and terminal
+def log_error_in_queue(group_id: int, message: str):
+    request_queue[group_id] = message
+    print(message)
+
+
+# download html, parse it and make the .ics file
 def set_up_schedule(group_id: int, subgroup_no: int):
+    add_to_queue(group_id)
+
     # download schedule HTML page if not present
     if not path.exists(f"raw_schedule/{group_id}.html"):
         if fetch_schedule(group_id):
-            print('Schedule retrieved successfully')
+            print(f'Schedule for group_id={group_id} retrieved successfully.')
         else:
-            request_queue.remove(group_id)
-            exit('Error retrieving schedule')
+            message = f'Error retrieving schedule for group_id={group_id}.'
+            log_error_in_queue(group_id, message)
+            return
     else:
-        print('Schedule already saved. Loading up.')
+        print(f'Schedule for group_id={group_id} already saved. Loading up.')
 
     # convert HTML schedule to an array of Lesson objects
     try:
         lessons = convert_html_to_lesson(f'{group_id}.html', subgroup_no)
     except Exception as E:
-        request_queue.remove(group_id)
-        exit(f'Error converting HTML into Lesson objects: {E}')
+        message = f'Error converting HTML for group_id={group_id} into Lesson objects: {E}'
+        log_error_in_queue(group_id, message)
+        return
 
     if convert_lesson_to_ics(lessons, group_id, subgroup_no):
-        request_queue.remove(group_id)
-        print('Successful ics conversion, file saved.')
+        remove_from_queue(group_id)
+        print(f'Successful ics conversion for group_id={group_id}, subgroup_no={subgroup_no}. File saved.')
     else:
-        request_queue.remove(group_id)
-        exit('Failed to convert to ics.')
+        message = f'Failed to convert to ics for group_id={group_id}, subgroup_no={subgroup_no}.'
+        log_error_in_queue(group_id, message)
+        return
 
 
 def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
@@ -179,7 +205,7 @@ def fetch_schedule(group_id: int) -> bool:
     request = requests.get(schedule_url)
 
     if not request.ok:
-        print(f'Error retrieving schedule. Request code: {request.status_code}.')
+        print(f'Error retrieving schedule for group_id={group_id}. Request code: {request.status_code}.')
         return False
     else:
         with open(f'raw_schedule/{group_id}.html', 'w') as file:
