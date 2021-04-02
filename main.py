@@ -1,9 +1,10 @@
 from os import path, mkdir
 from threading import Thread
 
-from bottle import route, run, template, static_file, default_app, HTTPResponse, response, get
+from bottle import route, run, template, static_file, default_app, HTTPResponse, get
 
-from funcs import is_valid_id, status_in_queue, set_up_schedule
+from funcs import status_in_queue, set_up_schedule
+from valid_groups import fetch_groups, group_id_is_valid
 
 
 # create necessary directories if missing
@@ -19,6 +20,18 @@ def index():
     return template("templates/index")
 
 
+# route for static files (css, js, etc)
+@route('/static/<filename>')
+def static(filename: str):
+    return static_file(filename, "static")
+
+
+# get group names and ids
+@get('/get_valid_groups')
+def get_valid_groups():
+    return fetch_groups()
+
+
 # download a file or start preparing it
 @get('/<group_id>/<subgroup_no>')
 def form_handler(group_id: int, subgroup_no: int = 1):
@@ -32,7 +45,7 @@ def form_handler(group_id: int, subgroup_no: int = 1):
         subgroup_no = int(subgroup_no)
     except ValueError:
         return HTTPResponse(status=400, body='Номера группы и подгруппы должны быть числами.', headers=cors_header)
-    if not is_valid_id(group_id):
+    if not group_id_is_valid(group_id):
         return HTTPResponse(status=400, body='Группы с таким ID нет.', headers=cors_header)
 
     filename: str = f"{group_id}-{subgroup_no}.ics"

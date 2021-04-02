@@ -9,7 +9,6 @@ from dateutil import tz
 from ics import Calendar, Event
 
 from classes import Lesson
-from valid_group_ids import valid_ids
 
 # keep track of schedules that are currently being worked on
 # or have errored out
@@ -207,7 +206,9 @@ def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: int, subgroup: int
 # fetch schedule
 def fetch_schedule(group_id: int) -> bool:
     base_url: str = 'https://guide.herzen.spb.ru/static/schedule_dates.php'
-    schedule_url: str = f'{base_url}?id_group={group_id}&date1=2021-01-01&date2='
+    today = datetime.today()
+    today_str = today.isoformat().split("T")[0]
+    schedule_url: str = f'{base_url}?id_group={group_id}&date1={today_str}&date2='
     request = requests.get(schedule_url)
 
     if not request.ok:
@@ -217,8 +218,3 @@ def fetch_schedule(group_id: int) -> bool:
         with open(f'raw_schedule/{group_id}.html', 'w') as file:
             file.writelines(request.text)
         return True
-
-
-# validate group id
-def is_valid_id(group_id: int) -> bool:
-    return group_id in valid_ids

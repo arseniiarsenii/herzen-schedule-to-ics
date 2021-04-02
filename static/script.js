@@ -1,6 +1,28 @@
-(() => {
+(async () => {
+    // url of the backend
+    let serverUrl = "http://0.0.0.0:8080";
+
+    // initialize group id dropdown
+    let groupIdDropdown = $(".ui.dropdown");
+    let groups = fetch(`${serverUrl}/get_valid_groups`)
+        .then(response => response.json())
+        .then(groups_dict => {
+            let result = [];
+            Object.entries(groups_dict).forEach(([key, value]) => {
+                result.push({
+                    value: key,
+                    text: `${value} ${key}`,
+                    name: `${value} [${key}]`
+                });
+            });
+
+            let values = {
+                values: result
+            }
+            groupIdDropdown.dropdown(values);
+        });
+
 	// grab all the relevant elements
-	let groupIdInput = document.getElementById("group-id");
 	let subgroupNoInput = document.getElementById("subgroup-id");
 	let downloadButton = document.getElementById("download");
 	let spinner = document.getElementById("spinner");
@@ -8,9 +30,9 @@
 
 	// listen for clicks on download button
 	downloadButton.addEventListener("click", async () => {
-	    let groupId = groupIdInput.value;
+	    let groupId = groupIdDropdown.dropdown("get value");
 	    let subgroupNo = subgroupNoInput.value;
-	    let url = `http://0.0.0.0:8080/${groupId}/${subgroupNo}`;
+	    let url = `${serverUrl}/${groupId}/${subgroupNo}`;
 	    message.innerHTML = "Расписание загружается. Иногда это может занять до 40 секунд.";
 
 	    let shouldBreak = false;
