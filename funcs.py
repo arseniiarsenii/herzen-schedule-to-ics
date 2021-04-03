@@ -11,7 +11,7 @@ from ics import Calendar, Event
 from classes import Lesson
 
 # keep track of schedules that are currently being worked on
-# or have errored out
+# or have caused an error
 request_queue: tp.Dict[int, str] = dict()
 
 
@@ -61,7 +61,7 @@ def set_up_schedule(group_id: int, subgroup_no: int) -> None:
         lessons = convert_html_to_lesson(f'{group_id}.html', subgroup_no)
     except Exception as E:
         message = 'Ошибка при обработке расписания. Возможно, неверно указан номер подгруппы?'
-        dev_message = f'Error converting HTML for group_id={group_id}, subgroup_no={subgroup_no} into Lesson objects: {E}'
+        dev_message = f'Error converting HTML for group {group_id}, subgroup {subgroup_no} into Lesson objects: {E}'
         log_error_in_queue(group_id, message, dev_message)
         return
 

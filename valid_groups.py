@@ -1,6 +1,5 @@
 import re
 import requests
-import lxml
 import typing as tp
 from bs4 import BeautifulSoup
 
