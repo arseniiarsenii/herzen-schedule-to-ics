@@ -1,5 +1,6 @@
 from os import path, mkdir
 from threading import Thread
+import typing as tp
 
 from bottle import route, run, template, static_file, default_app, HTTPResponse, get
 
@@ -9,32 +10,32 @@ from valid_groups import fetch_groups, group_id_is_valid
 
 # create necessary directories if missing
 directory_names = ['raw_schedule', 'processed_schedule']
-for dir in directory_names:
-    if not path.isdir(dir):
-        mkdir(dir)
+for dir_name in directory_names:
+    if not path.isdir(dir_name):
+        mkdir(dir_name)
 
 
 # display index page
 @route('/')
-def index():
+def index() -> template:
     return template('templates/index')
 
 
 # route for static files (css, js, etc)
 @route('/static/<filename>')
-def static(filename: str):
+def static(filename: str) -> static_file:
     return static_file(filename, 'static')
 
 
 # get group names and ids
 @get('/get_valid_groups')
-def get_valid_groups():
+def get_valid_groups() -> tp.Dict[int, str]:
     return fetch_groups()
 
 
 # get number of subgroups for given group
 @get('/get_subgroups/<group_id>')
-def get_subgroups(group_id: int):
+def get_subgroups(group_id: int) -> str:
     return str(fetch_subgroups(group_id))
 
 
