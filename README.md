@@ -5,6 +5,8 @@
 Herzen Schedule Export осуществляет парсинг веб-страницы с расписанием выбранной группы на сайте guide.herzen.spb.ru и
 конвертацию в файл iCalendar (.ics) с возможностью последующего импорта в Google календарь, Outlook и другие календари.
 
+[**Публичная версия Herzen Schedule Export на Heroku**](https://herzen-schedule-to-ics.herokuapp.com/)
+
 ## Использование
 
 - Домашняя страница имеет вид:
