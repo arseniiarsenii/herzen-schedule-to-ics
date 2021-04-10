@@ -155,7 +155,7 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
         try:
             for hl in lesson_data.find_all("a"):
                 if "atlas" in hl["href"]:
-                    lesson.teacher = hl.text
+                    lesson.teacher = hl.text.strip()
         except TypeError:
             pass
 
