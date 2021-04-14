@@ -15,24 +15,27 @@ from classes import Lesson
 request_queue: tp.Dict[int, str] = dict()
 
 
-# check if a schedule is currently being worked on
-# or has an error logged
 def status_in_queue(group_id: int) -> tp.Optional[str]:
+    """check if a schedule is currently being worked on or has an error logged"""
+
     return request_queue.get(group_id)
 
 
-# add to queue with working status
 def add_to_queue(group_id: int) -> None:
+    """add to queue with working status"""
+
     request_queue[group_id] = "Working"
 
 
-# remove from queue to indicate finishing work on a schedule
 def remove_from_queue(group_id: int) -> None:
+    """remove from queue to indicate finishing work on a schedule"""
+
     request_queue.pop(group_id, None)
 
 
-# log an error in queue and terminal
 def log_error_in_queue(group_id: int, message: str, dev_message: str = "") -> None:
+    """log an error in queue and terminal"""
+
     if not dev_message:
         dev_message = message
 
@@ -40,8 +43,9 @@ def log_error_in_queue(group_id: int, message: str, dev_message: str = "") -> No
     print(dev_message)
 
 
-# download html, parse it and make the .ics file
 def set_up_schedule(group_id: int, subgroup_no: int) -> None:
+    """download html, parse it and make the .ics file"""
+
     add_to_queue(group_id)
 
     # download schedule HTML page if not present
@@ -80,6 +84,8 @@ def set_up_schedule(group_id: int, subgroup_no: int) -> None:
 
 
 def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
+    """convert schedule html page with a given filename into a list of Lesson objects"""
+
     schedule_html = open(f"raw_schedule/{filename}", "r")
 
     # parse schedule
@@ -168,6 +174,8 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
 def convert_lesson_to_ics(
     lessons: tp.List[Lesson], group_id: int, subgroup: int = 1
 ) -> bool:
+    """convert a list of Lesson object instances into an ics file and save it. returns status"""
+
     try:
         # form an ics calendar
         calendar = Calendar()
@@ -209,8 +217,9 @@ def convert_lesson_to_ics(
         return False
 
 
-# fetch schedule
 def fetch_schedule(group_id: int) -> bool:
+    """fetch schedule"""
+
     base_url = "https://guide.herzen.spb.ru/static/schedule_dates.php"
     start_of_year = datetime(datetime.today().year, 1, 1)
     start_of_year_str = start_of_year.isoformat().split("T")[0]
@@ -228,8 +237,9 @@ def fetch_schedule(group_id: int) -> bool:
         return True
 
 
-# fetch static schedule and count the number of subgroups
 def fetch_subgroups(group_id: int) -> int:
+    """fetch static schedule and count the number of subgroups"""
+
     today = datetime.today().isoformat().split("T")[0]
     url = f"https://guide.herzen.spb.ru/static/schedule_dates.php?id_group={group_id}&date1={today}&date2={today}"
     html = requests.get(url).text

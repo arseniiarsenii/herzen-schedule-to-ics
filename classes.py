@@ -2,8 +2,9 @@ import typing as tp
 from datetime import datetime
 
 
-# Lesson object with corresponding attributes
 class Lesson:
+    """Lesson object with corresponding attributes"""
+
     def __init__(self) -> None:
         self.title: str  # lesson name
         self.type: str  # type e.g. lecture, lab, etc.
