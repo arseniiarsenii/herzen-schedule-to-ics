@@ -1,15 +1,38 @@
 import typing as tp
+from dataclasses import dataclass
 from datetime import datetime
 
+import ics
 
+
+@dataclass(frozen=True)
 class Lesson:
     """Lesson object with corresponding attributes"""
 
-    def __init__(self) -> None:
-        self.title: str  # lesson name
-        self.type: str  # type e.g. lecture, lab, etc.
-        self.start_time: tp.Optional[datetime] = None  # datetime object
-        self.end_time: tp.Optional[datetime] = None  # datetime object
-        self.course_link: str = ""  # moodle link
-        self.location: str = ""  # address or online
-        self.teacher: str = ""  # name of the teacher
+    title: str  # lesson name
+    type: str  # type e.g. lecture, lab, etc.
+    start_time: tp.Optional[datetime] = None  # datetime object
+    end_time: tp.Optional[datetime] = None  # datetime object
+    course_link: tp.Optional[str] = None  # moodle link
+    location: tp.Optional[str] = None  # address or online
+    teacher: tp.Optional[str] = None  # name of the teacher
+
+    @property
+    def ics_event(self) -> ics.Event:
+        event = ics.Event()
+        event.name = f"{self.title} [{self.type}]" if self.type else self.title
+        event.begin = self.start_time.strftime("%Y-%m-%d %H:%M:%S")
+        event.end = self.end_time.strftime("%Y-%m-%d %H:%M:%S")
+
+        description = []
+        if self.location:
+            description.append(f"Место: {self.location}")
+            event.location = self.location
+        if self.course_link:
+            description.append(f"Moodle: {self.course_link}")
+        if self.teacher:
+            description.append(f"Преподаватель: {self.teacher}")
+        if description:
+            event.description = "\n".join(description)
+
+        return event

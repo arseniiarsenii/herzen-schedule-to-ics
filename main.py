@@ -17,35 +17,30 @@ for dir_name in directory_names:
 @route("/")
 def index() -> template:
     """display index page"""
-
     return template("templates/index")
 
 
 @route("/static/<filename>")
 def static(filename: str) -> static_file:
     """route for static files (css, js, etc)"""
-
     return static_file(filename, "static")
 
 
 @get("/get_valid_groups")
 def get_valid_groups() -> tp.Dict[int, str]:
     """get group names and ids"""
-
     return fetch_groups()
 
 
 @get("/get_subgroups/<group_id>")
 def get_subgroups(group_id: int) -> str:
     """get number of subgroups for given group"""
-
     return str(fetch_subgroups(group_id))
 
 
 @get("/get_schedule/<group_id>/<subgroup_no>")
 def form_handler(group_id: int, subgroup_no: int = 1):
     """download a file or start preparing it"""
-
     print(f"User requested schedule for group_id={group_id}.")
     # cors header for javascript requests
     cors_k, cors_v = "Access-Control-Allow-Origin", "*"
