@@ -1,7 +1,7 @@
 import re
 import typing as tp
-from os import path
 from datetime import datetime
+from os import path
 
 import requests
 from bs4 import BeautifulSoup
@@ -53,7 +53,9 @@ def set_up_schedule(group_id: int, subgroup_no: int) -> None:
         if fetch_schedule(group_id):
             print(f"Schedule for group_id={group_id} retrieved successfully.")
         else:
-            message = "Ошибка при загрузке расписания с серверов РГПУ. Возможно, сервера недоступны?"
+            message = (
+                "Ошибка при загрузке расписания с серверов РГПУ. Возможно, сервера недоступны?"
+            )
             dev_message = f"Error retrieving schedule for group_id={group_id}."
             log_error_in_queue(group_id, message, dev_message)
             return
@@ -64,9 +66,7 @@ def set_up_schedule(group_id: int, subgroup_no: int) -> None:
     try:
         lessons = convert_html_to_lesson(f"{group_id}.html", subgroup_no)
     except Exception as E:
-        message = (
-            "Ошибка при обработке расписания. Возможно, неверно указан номер подгруппы?"
-        )
+        message = "Ошибка при обработке расписания. Возможно, неверно указан номер подгруппы?"
         dev_message = f"Error converting HTML for group {group_id}, subgroup {subgroup_no} into Lesson objects: {E}"
         log_error_in_queue(group_id, message, dev_message)
         return
@@ -78,7 +78,9 @@ def set_up_schedule(group_id: int, subgroup_no: int) -> None:
         )
     else:
         message = "Ошибка при конвертации расписания в файл."
-        dev_message = f"Failed to convert to ics for group_id={group_id}, subgroup_no={subgroup_no}."
+        dev_message = (
+            f"Failed to convert to ics for group_id={group_id}, subgroup_no={subgroup_no}."
+        )
         log_error_in_queue(group_id, message, dev_message)
         return
 
@@ -171,9 +173,7 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
     return all_lessons
 
 
-def convert_lesson_to_ics(
-    lessons: tp.List[Lesson], group_id: int, subgroup: int = 1
-) -> bool:
+def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: int, subgroup: int = 1) -> bool:
     """convert a list of Lesson object instances into an ics file and save it. returns status"""
 
     try:

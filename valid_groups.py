@@ -1,7 +1,7 @@
 import re
-import requests
-import lxml
 import typing as tp
+
+import requests
 from bs4 import BeautifulSoup
 
 # keep groups cached since they rarely change
@@ -43,15 +43,11 @@ def fetch_groups() -> tp.Dict[int, str]:
                 for group in groups:
                     # get name and join it with dept and form names
                     group_name = group.contents[0]
-                    group_full_name = ", ".join(
-                        [dept_names[i], form_names[j], group_name]
-                    )
+                    group_full_name = ", ".join([dept_names[i], form_names[j], group_name])
                     # find group id param in the element
                     group_id = int(group_id_re.search(str(group)).group())
                     # capitalize first letter and write to cache
-                    groups_cache[group_id] = (
-                        group_full_name[0].upper() + group_full_name[1:]
-                    )
+                    groups_cache[group_id] = group_full_name[0].upper() + group_full_name[1:]
 
     return groups_cache
 

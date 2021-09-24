@@ -1,12 +1,11 @@
+import typing as tp
 from os import path, mkdir
 from threading import Thread
-import typing as tp
 
 from bottle import route, run, template, static_file, default_app, HTTPResponse, get
 
 from funcs import status_in_queue, set_up_schedule, fetch_subgroups
 from valid_groups import fetch_groups, group_id_is_valid
-
 
 # create necessary directories if missing
 directory_names = ["raw_schedule", "processed_schedule"]
@@ -63,17 +62,13 @@ def form_handler(group_id: int, subgroup_no: int = 1):
             headers=cors_header,
         )
     if not group_id_is_valid(group_id):
-        return HTTPResponse(
-            status=400, body="Группы с таким ID нет.", headers=cors_header
-        )
+        return HTTPResponse(status=400, body="Группы с таким ID нет.", headers=cors_header)
 
     filename: str = f"{group_id}-{subgroup_no}.ics"
     # check if file already exists
     if path.exists(f"processed_schedule/{filename}"):
         print(f"{filename} already exists. No need to generate.")
-        file_response = static_file(
-            filename, root="processed_schedule", download=filename
-        )
+        file_response = static_file(filename, root="processed_schedule", download=filename)
         file_response.set_header(cors_k, cors_v)
         return file_response
 
@@ -96,7 +91,6 @@ def form_handler(group_id: int, subgroup_no: int = 1):
 
 # define 'app' object for the WSGI server to run
 app = default_app()
-
 
 # start a web server
 if __name__ == "__main__":
