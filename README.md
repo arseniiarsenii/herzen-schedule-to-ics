@@ -38,6 +38,27 @@ Herzen Schedule Export осуществляет парсинг веб-стран
   календарях есть поле "место"). Помимо места в описании события будут: имя преподавателя, ссылка на курс предмета в
   Moodle (если эти данные были указаны в расписании).
 
+## Быстрое развертывание с помощью Docker
+
+Сервер может быть развернут в считанные минуты благодаря Docker. Пример для систем на базе Debian:
+
+1. Обновить установленные пакеты: 
+```sudo apt update && sudo apt upgrade -y```
+
+2. Установить Git:
+```sudo apt install -y git```
+   
+3. Установить Docker:
+[Инструкция](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04)
+   
+3. Скачать репозиторий с GitHub и перейти в директорию с ним:
+```git clone https://github.com/arseniiarsenii/herzen-schedule-to-ics.git && cd herzen-schedule-to-ics```
+   
+4. Развернуть сервер в Docker контейнере:
+```sudo docker-compose up```
+   
+Сервер будет развёрнут по адресу ```http://0.0.0.0:8080```.
+
 ## Техническая реализация
 
 ### Использованные технологии
@@ -48,6 +69,7 @@ Herzen Schedule Export осуществляет парсинг веб-стран
 - Веб-фреймворк Bottle
 - Веб-сервер Gunicorn
 - Платформа Heroku
+- Система контейнеризации Docker
 - Язык Javascript
 - Модуль Ics
 

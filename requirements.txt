@@ -17,3 +17,5 @@ TatSu
 urllib3==1.26.4
 zope.interface==5.3.0
 lxml==4.6.3
+
+loguru~=0.5.3
