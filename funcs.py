@@ -7,6 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 from dateutil import tz
 from ics import Calendar
+from loguru import logger
 
 from classes import Lesson
 
@@ -33,18 +34,19 @@ def remove_from_queue(group_id: int) -> None:
 def log_error_in_queue(group_id: int, message: str, dev_message: tp.Optional[str] = None) -> None:
     """log an error in queue and terminal"""
     request_queue[group_id] = message
-    print(dev_message or message)
+    logger.info(dev_message or message)
 
 
+@logger.catch
 def set_up_schedule(group_id: int, subgroup_no: int) -> None:
     """download html, parse it and make the .ics file"""
     add_to_queue(group_id)
 
     # download schedule HTML page if not present
     if path.exists(f"raw_schedule/{group_id}.html"):
-        print(f"Schedule for group_id={group_id} already saved. Loading up.")
+        logger.info(f"Schedule for group_id={group_id} already saved. Loading up.")
     elif fetch_schedule(group_id):
-        print(f"Schedule for group_id={group_id} retrieved successfully.")
+        logger.info(f"Schedule for group_id={group_id} retrieved successfully.")
     else:
         message = "Ошибка при загрузке расписания с серверов РГПУ. Возможно, сервера недоступны?"
         dev_message = f"Error retrieving schedule for group_id={group_id}."
@@ -61,7 +63,7 @@ def set_up_schedule(group_id: int, subgroup_no: int) -> None:
 
     if convert_lesson_to_ics(lessons, group_id, subgroup_no):
         remove_from_queue(group_id)
-        print(f"Successful ics conversion for group_id={group_id}, subgroup_no={subgroup_no}. File saved.")
+        logger.info(f"Successful ics conversion for group_id={group_id}, subgroup_no={subgroup_no}. File saved.")
     else:
         message = "Ошибка при конвертации расписания в файл."
         dev_message = f"Failed to convert to ics for group_id={group_id}, subgroup_no={subgroup_no}."
@@ -69,6 +71,7 @@ def set_up_schedule(group_id: int, subgroup_no: int) -> None:
         return
 
 
+@logger.catch
 def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
     """convert schedule html page with a given filename into a list of Lesson objects"""
     # parse schedule
@@ -76,15 +79,16 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
         soup = BeautifulSoup(f, "html.parser")
     schedule = soup.find("table", class_="schedule")
     table_rows = schedule.find("tbody").find_all("tr")
+    logger.debug(f"Schedule table contains {len(table_rows)} rows.")
     all_lessons = []
+    date = None
 
     # iterate through the rows of the schedule table
     for row in table_rows:
         # if row contains date, parse it
-        day_name = row.find("th", class_="day_name")
+        day_name = row.find("th", class_="dayname")
         if day_name is not None:
-            date: str = day_name.text.split(",")[0]
-            day_name = None
+            date = day_name.text.split(",")[0]
             continue
 
         # if row is not date, assume it is a lesson entry.
@@ -93,7 +97,9 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
         # get lesson's start and end times
         try:
             timeframe: tp.List[str] = row.find("th").text.split(" — ")
+            logger.debug(timeframe)
         except AttributeError:
+            logger.debug(repr(row))
             continue
 
         # get string timestamps
@@ -137,7 +143,7 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
 
         # extract lesson's online course link if present
         course_link = lesson_data.find("strong").find("a")
-        lesson_course_link = course_link["href"] or None
+        lesson_course_link = course_link["href"] if course_link else None
 
         # extract lesson's location
         try:
@@ -170,6 +176,7 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
     return all_lessons
 
 
+@logger.catch
 def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: int, subgroup: int = 1) -> bool:
     """convert a list of Lesson object instances into an ics file and save it. returns status"""
     try:
@@ -181,19 +188,28 @@ def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: int, subgroup: int
         return True
 
     except Exception as E:
-        print(f"An error occurred while converting lessons:\n{E}")
+        logger.error(f"An error occurred while converting lessons:\n{E}")
         return False
 
 
+@logger.catch
 def fetch_schedule(group_id: int) -> bool:
     """fetch schedule"""
     base_url = "https://guide.herzen.spb.ru/static/schedule_dates.php"
-    start_of_year = datetime(datetime.today().year, 1, 1).isoformat().split("T")[0]
-    schedule_url = f"{base_url}?id_group={group_id}&date1={start_of_year}&date2="
+    today = datetime.today()
+    start_of_year = datetime(today.year, 1, 1)
+    start_of_school_year = datetime(today.year, 9, 1)
+
+    if start_of_year <= today <= start_of_school_year:
+        start = start_of_year.isoformat().split("T")[0]
+    else:
+        start = start_of_school_year.isoformat().split("T")[0]
+
+    schedule_url = f"{base_url}?id_group={group_id}&date1={start}&date2="
     request = requests.get(schedule_url)
 
     if not request.ok:
-        print(f"Error retrieving schedule for group_id={group_id}. Request code: {request.status_code}.")
+        logger.error(f"Error retrieving schedule for group_id={group_id}. Request code: {request.status_code}.")
         return False
 
     else:
