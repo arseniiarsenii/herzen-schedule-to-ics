@@ -11,8 +11,8 @@ class Lesson:
 
     title: str  # lesson name
     type: str  # type e.g. lecture, lab, etc.
-    start_time: tp.Optional[datetime] = None  # datetime object
-    end_time: tp.Optional[datetime] = None  # datetime object
+    start_time: datetime  # datetime object
+    end_time: datetime  # datetime object
     course_link: tp.Optional[str] = None  # moodle link
     location: tp.Optional[str] = None  # address or online
     teacher: tp.Optional[str] = None  # name of the teacher

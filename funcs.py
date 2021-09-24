@@ -61,14 +61,10 @@ def set_up_schedule(group_id: int, subgroup_no: int) -> None:
 
     if convert_lesson_to_ics(lessons, group_id, subgroup_no):
         remove_from_queue(group_id)
-        print(
-            f"Successful ics conversion for group_id={group_id}, subgroup_no={subgroup_no}. File saved."
-        )
+        print(f"Successful ics conversion for group_id={group_id}, subgroup_no={subgroup_no}. File saved.")
     else:
         message = "Ошибка при конвертации расписания в файл."
-        dev_message = (
-            f"Failed to convert to ics for group_id={group_id}, subgroup_no={subgroup_no}."
-        )
+        dev_message = f"Failed to convert to ics for group_id={group_id}, subgroup_no={subgroup_no}."
         log_error_in_queue(group_id, message, dev_message)
         return
 
@@ -101,13 +97,19 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
             continue
 
         # get string timestamps
-        start_time = f"{date} {timeframe[0]}"
-        end_time = f"{date} {timeframe[1]}"
+        start_time_: str = f"{date} {timeframe[0]}"
+        end_time_: str = f"{date} {timeframe[1]}"
         # convert to datetime objects
-        start_time = datetime.strptime(start_time, "%d.%m.%Y %H:%M").replace(
-            tzinfo=tz.gettz("Europe/Moscow")).astimezone(tz.tzutc())
-        end_time = datetime.strptime(end_time, "%d.%m.%Y %H:%M").replace(tzinfo=tz.gettz("Europe/Moscow")).astimezone(
-            tz.tzutc())
+        start_time: datetime = (
+            datetime.strptime(start_time_, "%d.%m.%Y %H:%M")
+            .replace(tzinfo=tz.gettz("Europe/Moscow"))
+            .astimezone(tz.tzutc())
+        )
+        end_time: datetime = (
+            datetime.strptime(end_time_, "%d.%m.%Y %H:%M")
+            .replace(tzinfo=tz.gettz("Europe/Moscow"))
+            .astimezone(tz.tzutc())
+        )
 
         # extract lesson type
         lesson_data = row.find_all("td")

@@ -39,7 +39,7 @@ def get_subgroups(group_id: int) -> str:
 
 
 @get("/get_schedule/<group_id>/<subgroup_no>")
-def form_handler(group_id: int, subgroup_no: int = 1):
+def form_handler(group_id: int, subgroup_no: int = 1) -> HTTPResponse:
     """download a file or start preparing it"""
     print(f"User requested schedule for group_id={group_id}.")
     # cors header for javascript requests
