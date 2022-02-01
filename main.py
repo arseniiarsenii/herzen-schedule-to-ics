@@ -1,3 +1,4 @@
+import sys
 import typing as tp
 from os import mkdir, path
 from threading import Thread
@@ -7,6 +8,19 @@ from loguru import logger
 
 from funcs import fetch_subgroups, set_up_schedule, status_in_queue
 from valid_groups import fetch_groups, group_id_is_valid
+
+logger_conf = {
+    "colorize": True,
+    "backtrace": True,
+    "diagnose": True,
+    "catch": True,
+    "level": "DEBUG",
+    "sink": sys.stdout,
+}
+logger.configure(handlers=[logger_conf])
+
+# cors header for javascript requests
+CORS = {"Access-Control-Allow-Origin": "*"}
 
 # create necessary directories if missing
 directory_names = ["raw_schedule", "processed_schedule"]
@@ -90,4 +104,5 @@ app = default_app()
 
 # start a web server
 if __name__ == "__main__":
-    run(app=app, host="0.0.0.0", port=8080, server="gunicorn", debug=True)
+    logger.info("Starting server")
+    run(app=app, host="0.0.0.0", port=8080, debug=True)
