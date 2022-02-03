@@ -1,12 +1,9 @@
 (async () => {
-    // url of the backend
-    let serverUrl = 'https://herzen-schedule-to-ics.herokuapp.com';
-
     // get group id and subgroup elements
     let $groupIdDropdown = $('.ui.dropdown');
     let subgroups = document.querySelectorAll('input[name="subgroup"]');
     // get groups from server
-    fetch(`${serverUrl}/get_valid_groups`)
+    fetch(`/get_valid_groups`)
         .then(response => response.json())
         .then(groups_dict => {
             let result = [];
@@ -29,7 +26,7 @@
                 onChange: async (value, text) => {
                     document.querySelector('input[name="subgroup"][value="1"]').checked = true;
 
-                    let numberOfSubgroups = await fetch(`${serverUrl}/get_subgroups/${value}`);
+                    let numberOfSubgroups = await fetch(`/get_subgroups/${value}`);
                     numberOfSubgroups = parseInt(await numberOfSubgroups.text())
                     if (numberOfSubgroups > 0) {
                         for (let i = 0; i < subgroups.length; i++) {
@@ -63,7 +60,7 @@
 	        return;
         }
 	    let subgroupNo = document.querySelector('input[name="subgroup"]:checked').value;
-	    let url = `${serverUrl}/get_schedule/${groupId}/${subgroupNo}`;
+	    let url = `/get_schedule/${groupId}/${subgroupNo}`;
 	    message.innerHTML = 'Расписание загружается. Иногда это может занять до 40 секунд.';
 
 	    let shouldBreak = false;
