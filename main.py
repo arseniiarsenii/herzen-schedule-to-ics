@@ -61,9 +61,9 @@ def get_valid_groups():
 
 
 @app.get("/get_subgroups/{group_id}")
-def get_subgroups(group_id: int) -> str:
+def get_subgroups(group_id: int) -> int:
     """get number of subgroups for given group"""
-    return str(fetch_subgroups(group_id))
+    return fetch_subgroups(group_id)
 
 
 @app.get("/get_schedule/{group_id}/{subgroup_no}")

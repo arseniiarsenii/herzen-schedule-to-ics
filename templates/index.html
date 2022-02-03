@@ -31,14 +31,14 @@
                     <div>Выберите номер подгруппы</div>
                     <br>
                     <div class="inline fields" style="display: flex; flex-direction: row; justify-content: center;">
-                    % for i in range(1,5):
+                    {% for i in range(1,5): %}
                         <div class="field">
                             <div class="ui radio checkbox">
                                 <input type="radio" name="subgroup" value="{{ i }}" {{ 'checked="checked"' if i == 1 else '' }}>
                                 <label>{{ i }}</label>
                             </div>
                         </div>
-                    % end
+                    {% endfor %}
                     </div>
                 </div>
                 <br>
