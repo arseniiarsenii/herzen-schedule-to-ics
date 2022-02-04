@@ -1,1 +1,1 @@
-web: gunicorn main:app  -w 4 --keep-alive 120 --timeout 120
+web: uvicorn main:app --host 0.0.0.0 --port 80
