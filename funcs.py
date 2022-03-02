@@ -77,7 +77,13 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
     # parse schedule
     with open(f"raw_schedule/{filename}", "r") as f:
         soup = BeautifulSoup(f, "html.parser")
-    schedule = soup.find_all("table", class_="schedule")[-1]
+    tables = soup.find_all("table", class_="schedule")
+
+    if len(tables) <= 2:
+        schedule = tables[-1]
+    else:
+        schedule = tables[1]
+
     table_rows = schedule.find("tbody").find_all("tr")
     logger.debug(f"Schedule table contains {len(table_rows)} rows.")
     all_lessons = []
