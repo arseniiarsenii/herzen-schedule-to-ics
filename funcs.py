@@ -205,13 +205,15 @@ def fetch_schedule(group_id: int) -> bool:
     today = datetime.today()
     start_of_year = datetime(today.year, 1, 1)
     start_of_school_year = datetime(today.year, 9, 1)
+    middle_of_the_year = datetime(today.year, 7, 1)
 
-    if start_of_year <= today <= start_of_school_year:
+    if today <= middle_of_the_year:
         start = start_of_year.isoformat().split("T")[0]
     else:
         start = start_of_school_year.isoformat().split("T")[0]
 
     schedule_url = f"{base_url}?id_group={group_id}&date1={start}&date2="
+    logger.debug(f"Fetching schedule by URL: {schedule_url}")
     request = requests.get(schedule_url)
 
     if not request.ok:
