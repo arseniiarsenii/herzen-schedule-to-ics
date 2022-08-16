@@ -43,18 +43,11 @@ def set_up_schedule(group_id: int, subgroup_no: int) -> None:
     add_to_queue(group_id)
 
     # download schedule HTML page if not present
-    if path.exists(f"raw_schedule/{group_id}.html"):
-        logger.info(f"Schedule for group_id={group_id} already saved. Loading up.")
-    elif fetch_schedule(group_id):
-        logger.info(f"Schedule for group_id={group_id} retrieved successfully.")
-    else:
-        message = "Ошибка при загрузке расписания с серверов РГПУ. Возможно, сервера недоступны?"
-        dev_message = f"Error retrieving schedule for group_id={group_id}."
-        log_error_in_queue(group_id, message, dev_message)
-        return
+    filename = fetch_schedule(group_id)
+
     # convert HTML schedule to an array of Lesson objects
     try:
-        lessons = convert_html_to_lesson(f"{group_id}.html", subgroup_no)
+        lessons = convert_html_to_lesson(filename, subgroup_no)
     except Exception as E:
         message = "Ошибка при обработке расписания. Возможно, неверно указан номер подгруппы?"
         dev_message = f"Error converting HTML for group {group_id}, subgroup {subgroup_no} into Lesson objects: {E}"
@@ -75,7 +68,7 @@ def set_up_schedule(group_id: int, subgroup_no: int) -> None:
 def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
     """convert schedule html page with a given filename into a list of Lesson objects"""
     # parse schedule
-    with open(f"raw_schedule/{filename}", "r") as f:
+    with open(filename, "r") as f:
         soup = BeautifulSoup(f, "html.parser")
     tables = soup.find_all("table", class_="schedule")
 
@@ -103,7 +96,6 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
         # get lesson's start and end times
         try:
             timeframe: tp.List[str] = row.find("th").text.split(" — ")
-            logger.debug(timeframe)
         except AttributeError:
             logger.debug(repr(row))
             continue
@@ -199,9 +191,8 @@ def convert_lesson_to_ics(lessons: tp.List[Lesson], group_id: int, subgroup: int
 
 
 @logger.catch
-def fetch_schedule(group_id: int) -> bool:
+def fetch_schedule(group_id: int) -> str:
     """fetch schedule"""
-    base_url = "https://guide.herzen.spb.ru/static/schedule_dates.php"
     today = datetime.today()
     start_of_year = datetime(today.year, 1, 1)
     start_of_school_year = datetime(today.year, 9, 1)
@@ -212,19 +203,30 @@ def fetch_schedule(group_id: int) -> bool:
     else:
         start = start_of_school_year.isoformat().split("T")[0]
 
+    filename = f"raw_schedule/{group_id}-{start}.html"
+
+    if path.exists(filename):
+        logger.info(f"Schedule for group_id={group_id} already saved. Loading up.")
+        return filename
+
+    base_url = "https://guide.herzen.spb.ru/static/schedule_dates.php"
     schedule_url = f"{base_url}?id_group={group_id}&date1={start}&date2="
     logger.debug(f"Fetching schedule by URL: {schedule_url}")
     request = requests.get(schedule_url)
 
     if not request.ok:
         logger.error(f"Error retrieving schedule for group_id={group_id}. Request code: {request.status_code}.")
-        return False
+        message = "Ошибка при загрузке расписания с серверов РГПУ. Возможно, сервера недоступны?"
+        dev_message = f"Error retrieving schedule for group_id={group_id}."
+        log_error_in_queue(group_id, message, dev_message)
+        raise ConnectionError(dev_message)
 
-    else:
-        with open(f"raw_schedule/{group_id}.html", "w") as file:
-            file.writelines(request.text)
+    logger.info(f"Schedule for group_id={group_id} retrieved successfully.")
 
-        return True
+    with open(filename, "w") as file:
+        file.writelines(request.text)
+
+    return filename
 
 
 def fetch_subgroups(group_id: int) -> int:

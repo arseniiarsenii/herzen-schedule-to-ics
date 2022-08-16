@@ -1,4 +1,5 @@
 import sys
+import time
 from os import mkdir, path
 from threading import Thread
 
@@ -87,7 +88,7 @@ def form_handler(group_id: int, subgroup_no: int = 1):
     # check if file already exists
     file_path = f"processed_schedule/{filename}"
 
-    if path.exists(file_path):
+    if path.exists(file_path) and time.time() - path.getctime(file_path) <= 60 * 60 * 24:
         logger.info(f"{filename} already exists. No need to generate.")
         return FileResponse(file_path)
 
