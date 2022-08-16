@@ -72,12 +72,15 @@ def convert_html_to_lesson(filename: str, subgroup: int) -> tp.List[Lesson]:
         soup = BeautifulSoup(f, "html.parser")
     tables = soup.find_all("table", class_="schedule")
 
-    if len(tables) <= 2:
-        schedule = tables[-1]
-    else:
-        schedule = tables[1]
+    assert len(tables) > 0, "The requested page contains no table tags"
 
-    table_rows = schedule.find("tbody").find_all("tr")
+    # They tend to randomly add tables before and after the main schedule table tagging them the same class
+    # Let's just hope the target table is always 20 lines or more in length
+    for table in tables:
+        table_rows = table.find("tbody").find_all("tr")
+        if len(table_rows) >= 20:
+            break
+
     logger.debug(f"Schedule table contains {len(table_rows)} rows.")
     all_lessons = []
     date = None
